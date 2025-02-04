@@ -661,7 +661,9 @@ func (rc *RunContext) startContainer() common.Executor {
 func (rc *RunContext) IsHostEnv(ctx context.Context) bool {
 	platform := rc.runsOnImage(ctx)
 	image := rc.containerImage(ctx)
-	return image == "" && strings.EqualFold(platform, "-self-hosted")
+	common.Logger(ctx).Infof("platform %+v=...`", platform)
+	common.Logger(ctx).Infof("image %+v=...`", image)
+	return strings.HasPrefix(image, "codebuild-") || (image == "" && strings.EqualFold(platform, "-self-hosted")) || (image == "" && platform == "")
 }
 
 func (rc *RunContext) stopContainer() common.Executor {
@@ -801,11 +803,13 @@ func (rc *RunContext) isEnabled(ctx context.Context) (bool, error) {
 	}
 
 	img := rc.platformImage(ctx)
+	l.Infof("image %+v=...", img)
 	if img == "" {
 		for _, platformName := range rc.runsOnPlatformNames(ctx) {
+			l.Infof("platformName %+v=...`", platformName)
 			l.Infof("\U0001F6A7  Skipping unsupported platform -- Try running with `-P %+v=...`", platformName)
 		}
-		return false, nil
+		return true, nil
 	}
 	return true, nil
 }
